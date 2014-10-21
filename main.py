@@ -10,7 +10,7 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 twitter_blueprint = make_twitter_blueprint(
     api_key=os.environ['TWITTER_KEY'],
     api_secret=os.environ['TWITTER_SECRET'],
-    redirect_url="http://127.0.0.1:5000",
+    redirect_url=os.environ['REDIRECT_URL'],
 )
 app.register_blueprint(twitter_blueprint, url_prefix="/login")
 
