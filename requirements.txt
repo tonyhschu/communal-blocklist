@@ -12,6 +12,6 @@ itsdangerous==0.24
 oauthlib==0.6.3
 psycopg2==2.5.4
 requests==2.4.3
-requests-oauthlib==git+https://github.com/requests/requests-oauthlib.git@23fc41b#egg=requests_oauthlib
+requests-oauthlib==-e git+https://github.com/requests/requests-oauthlib.git@23fc41b#egg=requests_oauthlib
 six==1.8.0
 wsgiref==0.1.2
