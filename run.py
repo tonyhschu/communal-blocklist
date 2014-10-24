@@ -1,0 +1,1 @@
+from communalblocklist import app
