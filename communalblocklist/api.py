@@ -4,8 +4,17 @@ from flask.ext import restful
 
 api = restful.Api(app)
 
-class User(restful.Resource):
+class CurrentUser(restful.Resource):
     def get(self):
-        return {'hello': 'world'}
+        if not twitter.authorized:
+            return {
+                'status': 'redirect',
+                'redirect': 'login'
+            }
 
-api.add_resource(User, '/user')
+        resp = twitter.get("account/verify_credentials.json")
+        assert resp.ok
+
+        return resp.json()
+
+api.add_resource(CurrentUser, '/api/current_user')
