@@ -9,6 +9,8 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['DATABASE_URL'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL']
 
+app.debug = True
+
 # os.environ variable are either in .env (locally), or set via heroku config:set TWITTER_KEY=XXXXXXX
 twitter_blueprint = make_twitter_blueprint(
     api_key=os.environ['TWITTER_KEY'],
@@ -20,4 +22,3 @@ app.register_blueprint(twitter_blueprint, url_prefix="/login")
 import communalblocklist.views
 import communalblocklist.api
 import communalblocklist.models
-
