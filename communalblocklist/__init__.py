@@ -15,3 +15,4 @@ twitter_blueprint = make_twitter_blueprint(
 app.register_blueprint(twitter_blueprint, url_prefix="/login")
 
 import communalblocklist.views
+import communalblocklist.api
