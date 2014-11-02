@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from flask_dance.contrib.twitter import make_twitter_blueprint, twitter
-from flask.ext.security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required
+from flask.ext.login import LoginManager
 
 app = Flask(__name__)
 app.config['DEBUG'] = os.environ['DEBUG']
@@ -19,6 +19,16 @@ twitter_blueprint = make_twitter_blueprint(
 )
 app.register_blueprint(twitter_blueprint, url_prefix="/login")
 
+import communalblocklist.models
+from communalblocklist.models import User
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "index"
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
 import communalblocklist.views
 import communalblocklist.api
-import communalblocklist.models
