@@ -6,38 +6,32 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 
 @app.route("/")
 def index():
+    if current_user.is_authenticated():
+        return "You are back, @{screen_name}!".format(screen_name=current_user.screen_name)
+    else:
+        return "Welcome to communal blocklist <a href=\"/auth\">Login</a>"
+
+@app.route("/auth")
+def auth():
     if not twitter.authorized:
         return redirect(url_for("twitter.login"))
 
     resp = twitter.get("account/verify_credentials.json")
-    assert resp.ok
+    rjson = resp.json()
 
-    screenname = resp.json()["screen_name"]
+    t_id = rjson["id"]
+    screen_name = rjson["screen_name"]
 
-    app.logger.debug(screenname)
-
-    user_record = User.query.filter_by(screenname=screenname).first()
+    user_record = User.query.filter_by(t_id=t_id).first()
 
     if user_record is None:
-        user_record = User(screenname=screenname)
+        user_record = User(t_id = t_id, screen_name=screen_name)
+
+        twitter_blueprint.set_token_storage_sqlalchemy(OAuth, db.session, user=user_record)
+
         db.session.add(user_record)
         db.session.commit()
 
-        login_user(user_record)
+    login_user(user_record)
 
-        return "welcome"
-    else:
-        login_user(user_record)
-        return "You are back, @{screen_name}!".format(screen_name=current_user.screenname)
-
-
-@app.route("/admin")
-def admin():
-    app.logger.debug(current_user)
-
-    if current_user.is_authenticated():
-        return "True"
-    else:
-        return "False"
-
-
+    return redirect("/")
