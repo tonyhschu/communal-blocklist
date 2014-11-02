@@ -27,7 +27,9 @@ def auth():
     if user_record is None:
         user_record = User(t_id = t_id, screen_name=screen_name)
 
+        t = twitter_blueprint.get_token()
         twitter_blueprint.set_token_storage_sqlalchemy(OAuth, db.session, user=user_record)
+        twitter_blueprint.set_token(t)
 
         db.session.add(user_record)
         db.session.commit()
@@ -35,3 +37,18 @@ def auth():
     login_user(user_record)
 
     return redirect("/")
+
+@app.route("/token")
+@login_required
+def token():
+    if not twitter.authorized:
+        return redirect(url_for("twitter.login"))
+
+    t = twitter_blueprint.get_token()
+    twitter_blueprint.set_token_storage_sqlalchemy(OAuth, db.session, user=current_user)
+    twitter_blueprint.set_token(t)
+
+    g = twitter_blueprint.get_token()
+    app.logger.debug(g)
+
+    return "token set"
