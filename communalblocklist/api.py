@@ -83,7 +83,10 @@ class Blocks(Resource):
 
         # Preparing the list of Topics
         topics = []
-        topics.append(get_or_create(Topic, name="All", description="Catch all blocking group."))
+
+        # Get or create the All group
+        catch_all, catch_all_new = get_or_create(Topic, name="All", description="Catch all blocking group.")
+        topics.append(catch_all)
 
         if args['topics'] is not None:
             tlist = args['topics'].split(",")
@@ -91,8 +94,7 @@ class Blocks(Resource):
             for t in tlist:
                 topic_name = t.strip()
 
-                topic = get_or_create(Topic, name=topic_name)
-
+                topic, new = get_or_create(Topic, name=topic_name)
                 topics.append(topic)
 
         # Getting the user to be blocked
@@ -117,6 +119,7 @@ class Blocks(Resource):
             db.session.add(block)
             db.session.commit()
         else:
+            # TODO: check if new topics are being added to a current block
             app.logger.debug(block.topics)
 
         return {
