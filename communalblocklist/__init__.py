@@ -24,13 +24,6 @@ from communalblocklist.models import User, Topic, db
 import communalblocklist.views
 import communalblocklist.api
 
-# Add first topic if it isn't there already
-topic_record = Topic.query.filter_by(name="All").first()
-if topic_record is None:
-    topic_record = Topic(name="All", description="Catch all blocking group.")
-    db.session.add(topic_record)
-    db.session.commit()
-
 # Start login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
