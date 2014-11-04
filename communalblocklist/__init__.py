@@ -9,6 +9,9 @@ app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 app.config['DATABASE_URL'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_DATABASE_URI'] = app.config['DATABASE_URL']
 
+app.config['BROKER_URL']=os.environ['REDISGREEN_URL']
+app.config['CELERY_RESULT_BACKEND']=os.environ['REDISGREEN_URL']
+
 app.debug = True
 
 # os.environ variable are either in .env (locally), or set via heroku config:set TWITTER_KEY=XXXXXXX
@@ -23,6 +26,7 @@ import communalblocklist.models
 from communalblocklist.models import User, Topic, db
 import communalblocklist.views
 import communalblocklist.api
+import communalblocklist.tasks
 
 # Start login manager
 login_manager = LoginManager()
