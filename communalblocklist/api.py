@@ -95,6 +95,30 @@ class Blocks(Resource):
     def post(self):
         args = parser.parse_args()
 
+        # Validation: was a screen_name provided?
+        if args['screen_name'] is None:
+            return {
+                "error": "Must provide the screen name of twitter user to be blocked."
+            }, 400
+
+        # Getting the user to be blocked
+        payload = {'screen_name':args['screen_name'],'include_entities':'false'}
+
+        resp = twitter.get("users/lookup.json", params=payload)
+        user_details = resp.json()
+
+        if len(user_details) != 1:
+            if len(user_details) == 0:
+                return {
+                    "error": "No user with screen name '{0}' found.".format(args['screen_name'])
+                }, 400
+            else:
+                return {
+                    "error": "More than one user with screen name '{0}' found????????".format(args['screen_name'])
+                }, 400
+
+        user = user_details[0]
+
         # Preparing the list of Topics
         topics = []
 
@@ -111,21 +135,13 @@ class Blocks(Resource):
                 topic, new = get_or_create(Topic, name=topic_name)
                 topics.append(topic)
 
-        # Getting the user to be blocked
-        '''
-        payload = {'screen_name':args['screen_name'],'include_entities':'false'}
-
-        resp = twitter.get("users/lookup.json", params=payload)
-        user_details = resp.json()
-        '''
-        user_details = {"screen_name":"playdangerously", "id":"358545917"}
-
-        block = Block.query.filter_by(t_id=user_details["id"]).first()
+        # Checking the user is already in our DB
+        block = Block.query.filter_by(t_id=int(user["id"])).first()
 
         if block is None:
             block = Block(
-                t_id=user_details["id"],
-                screen_name=user_details["screen_name"],
+                t_id=user["id"],
+                screen_name=user["screen_name"],
                 by_user_id=current_user.id,
                 by_user=current_user,
                 topics=topics
