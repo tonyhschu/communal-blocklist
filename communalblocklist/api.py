@@ -4,6 +4,7 @@ from flask import request
 from flask_dance.contrib.twitter import twitter
 from flask.ext.restful import reqparse, abort, Api, Resource
 from flask.ext.login import login_user, logout_user, current_user, login_required
+from urllib import unquote, urlencode
 
 api = Api(app)
 
@@ -18,6 +19,9 @@ parser.add_argument('topic', type=str)
 def toModelJSON(instance):
     return instance.toJSON()
 
+def getTopicID(topic):
+    return topic.id
+
 class CurrentUser(Resource):
     @login_required
     def get(self):
@@ -30,7 +34,52 @@ class CurrentUser(Resource):
           "twitter": resp.json()
         }
 
-class CurrentUserSubscribedTopics(Resource):
+class CurrentUserSubscribedTopic(Resource):
+    @login_required
+    def get(self, topic_name):
+        topic_name = unquote(topic_name)
+
+        topic = Topic.query.filter_by(name=topic_name).first()
+
+        if topic is None:
+            return {
+                "error": "The topic '{0}' does not exist.".format(topic_name)
+            }, 404
+        else:
+            if topic in current_user.topics:
+                return topic.toJSON()
+            else:
+                return {
+                    "error": "You are not subscribed to '{0}'.".format(topic_name)
+                }, 400
+
+    def delete(self, topic_name):
+        topic_name = unquote(topic_name)
+
+        topic = Topic.query.filter_by(name=topic_name).first()
+
+        if topic is None:
+            return {
+                "error": "Must provide an existing topic to unsubscribe from."
+            }, 404
+        else:
+            if topic in current_user.topics:
+                current_user.topics.remove(topic)
+                db.session.commit();
+
+                return {
+                    "status": "success",
+                    "message": "Removed subscription to '{0}'.".format(topic_name),
+                    "topics": map(toModelJSON, current_user.topics)
+                }
+            else:
+                return {
+                    "status": "success",
+                    "message": "Not subscribed to to '{0}' anyway.".format(topic_name),
+                    "topics": map(toModelJSON, current_user.topics)
+                }
+
+class CurrentUserSubscribedTopicsList(Resource):
     @login_required
     def get(self):
         subscribed_topics = current_user.topics
@@ -74,9 +123,6 @@ class CurrentUserBlocks(Resource):
     @login_required
     def get(self):
         subscribed_topics = current_user.topics
-
-        def getTopicID(topic):
-            return topic.id
 
         subscribed_topic_ids = map(getTopicID, subscribed_topics)
 
@@ -183,7 +229,8 @@ class Topics(Resource):
             return topic.toJSON(), 200
 
 api.add_resource(CurrentUser, '/api/current_user')
-api.add_resource(CurrentUserSubscribedTopics, '/api/current_user/topics')
+api.add_resource(CurrentUserSubscribedTopicsList, '/api/current_user/topics')
+api.add_resource(CurrentUserSubscribedTopic, '/api/current_user/topics/<string:topic_name>')
 api.add_resource(CurrentUserBlocks, '/api/current_user/blocks')
 api.add_resource(Blocks, '/api/blocks')
 api.add_resource(Topics, '/api/topics')

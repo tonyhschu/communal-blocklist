@@ -81,6 +81,7 @@ class Block(db.Model):
 
         return {
             "user_id": self.t_id,
+            "screen_name": self.screen_name,
             "topics": map(getTopicJSON, self.topics)
         }
 
