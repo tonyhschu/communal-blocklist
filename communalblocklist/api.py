@@ -70,6 +70,20 @@ class CurrentUserSubscribedTopics(Resource):
                     "topics": map(toModelJSON, current_user.topics)
                 }
 
+class CurrentUserBlocks(Resource):
+    @login_required
+    def get(self):
+        subscribed_topics = current_user.topics
+
+        def getTopicID(topic):
+            return topic.id
+
+        subscribed_topic_ids = map(getTopicID, subscribed_topics)
+
+        blocks = Block.query.filter(Block.topics.any(Topic.id.in_(subscribed_topic_ids))).all()
+
+        return map(toModelJSON, blocks)
+
 class Blocks(Resource):
     @login_required
     def get(self):
@@ -154,5 +168,6 @@ class Topics(Resource):
 
 api.add_resource(CurrentUser, '/api/current_user')
 api.add_resource(CurrentUserSubscribedTopics, '/api/current_user/topics')
+api.add_resource(CurrentUserBlocks, '/api/current_user/blocks')
 api.add_resource(Blocks, '/api/blocks')
 api.add_resource(Topics, '/api/topics')

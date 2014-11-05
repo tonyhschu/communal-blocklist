@@ -22,7 +22,6 @@ users_exception = db.Table('users_exception',
         db.Column('user_id', db.Integer(), db.ForeignKey('users.id')),
         db.Column('block_id', db.Integer(), db.ForeignKey('block.id')))
 
-
 class Topic(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True)
@@ -73,8 +72,16 @@ class Block(db.Model):
     by_user = db.relationship(User)
 
     def toJSON(self):
+        def getTopicJSON(topic):
+            return {
+              "id": topic.id,
+              "name": topic.name
+            }
+
+
         return {
-            "user_id": self.t_id
+            "user_id": self.t_id,
+            "topics": map(getTopicJSON, self.topics)
         }
 
 class OAuth(db.Model, OAuthConsumerMixin):
