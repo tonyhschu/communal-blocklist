@@ -6,6 +6,8 @@ from flask.ext.restful import reqparse, abort, Api, Resource
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from urllib import unquote, urlencode
 
+import sets
+
 api = Api(app)
 
 parser = reqparse.RequestParser()
@@ -119,16 +121,55 @@ class CurrentUserSubscribedTopicsList(Resource):
                     "topics": map(toModelJSON, current_user.topics)
                 }
 
+def getTwitterIDs(block):
+    return block.t_id
+
 class CurrentUserBlocks(Resource):
     @login_required
     def get(self):
         subscribed_topics = current_user.topics
 
+        # Getting the current list of blocks for this user
+        resp = twitter.get("blocks/ids.json")
+        current_blocks = resp.json()
+
+        app.logger.debug(current_blocks)
+
+        current_set = set(current_blocks["ids"])
+
+        # Get all users covered by subscribed topics
         subscribed_topic_ids = map(getTopicID, subscribed_topics)
 
-        blocks = Block.query.filter(Block.topics.any(Topic.id.in_(subscribed_topic_ids))).all()
+        all_blocks = Block.query.filter(Block.topics.any(Topic.id.in_(subscribed_topic_ids))).all()
 
-        return map(toModelJSON, blocks)
+        all_set = set(map(getTwitterIDs, all_blocks))
+
+        # Get all recorded blocks
+        recorded_blocks = current_user.blocked
+        recorded_set = set(map(getTwitterIDs, recorded_blocks))
+
+        # Get all exceptions
+        block_exceptions = current_user.exception
+        exception_set = set(map(getTwitterIDs, recorded_blocks))
+
+        # Compute targets
+        target_set = all_set.difference(exception_set)
+
+        # Compute new set
+        new_set = current_set.difference(target_set, recorded_set)
+
+        # Compute set of syncs required
+        sync_set = target_set.difference(current_set)
+
+        return {
+          "target" : list(target_set),
+          "exception" : list(exception_set),
+          "on_twitter" : list(current_set),
+          "recorded" : list(recorded_set),
+          "new" : list(new_set),
+          "to_sync" : list(sync_set)
+        }
+
 
 class Blocks(Resource):
     @login_required
