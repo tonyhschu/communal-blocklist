@@ -1,8 +1,7 @@
-from communalblocklist import app
-from communalblocklist.models import Block, Topic, User, db, get_or_create
+from communalblocklist import app, os
+from communalblocklist.models import Block, Topic, User, OAuth, db, get_or_create
+from requests_oauthlib import OAuth1Session
 from flask import request
-from flask_dance.contrib.twitter import twitter
-from flask.ext.login import current_user
 
 def getTopicID(topic):
     return topic.id
@@ -13,8 +12,15 @@ def getTwitterIDs(block):
 def computeSetsForUser(user):
     subscribed_topics = user.topics
 
+    oauthRecord = OAuth.query.filter_by(user_id = user.id).first()
+    app.logger.debug(oauthRecord)
+    oauthToken = oauthRecord.token
+    app.logger.debug(oauthToken['oauth_token_secret'])
+
+    twitter = OAuth1Session(os.environ['TWITTER_KEY'], client_secret=os.environ['TWITTER_SECRET'], resource_owner_key=oauthToken['oauth_token'], resource_owner_secret=oauthToken['oauth_token_secret'])
+
     # Getting the current list of blocks for this user
-    resp = twitter.get("blocks/ids.json")
+    resp = twitter.get("https://api.twitter.com/1.1/blocks/ids.json")
     current_blocks = resp.json()
 
     current_set = set(current_blocks["ids"])
@@ -27,11 +33,11 @@ def computeSetsForUser(user):
     all_set = set(map(getTwitterIDs, all_blocks))
 
     # Get all recorded blocks
-    recorded_blocks = current_user.blocked
+    recorded_blocks = user.blocked
     recorded_set = set(map(getTwitterIDs, recorded_blocks))
 
     # Get all exceptions
-    block_exceptions = current_user.exception
+    block_exceptions = user.exception
     exception_set = set(map(getTwitterIDs, recorded_blocks))
 
     # Compute targets
