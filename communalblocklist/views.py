@@ -19,7 +19,7 @@ def auth():
     resp = twitter.get("account/verify_credentials.json")
     rjson = resp.json()
 
-    t_id = rjson["id"]
+    t_id = rjson["id_str"]
     screen_name = rjson["screen_name"]
 
     user_record = User.query.filter_by(t_id=t_id).first()

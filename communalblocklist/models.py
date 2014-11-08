@@ -42,7 +42,7 @@ class User(db.Model, UserMixin):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    t_id = db.Column(db.Integer)
+    t_id = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True)
     screen_name = db.Column(db.String(15), nullable=False)
 
@@ -63,7 +63,7 @@ class User(db.Model, UserMixin):
 
 class Block(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    t_id = db.Column(db.Integer, unique=True)
+    t_id = db.Column(db.String(255))
     screen_name = db.Column(db.String(15), nullable=False)
     topics = db.relationship('Topic', secondary=topics_blocks,
                             backref=db.backref('topic', lazy='dynamic'))

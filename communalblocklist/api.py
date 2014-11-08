@@ -186,11 +186,11 @@ class Blocks(Resource):
                 topics.append(topic)
 
         # Checking the user is already in our DB
-        block = Block.query.filter_by(t_id=int(user["id"])).first()
+        block = Block.query.filter_by(t_id=int(user["id_str"])).first()
 
         if block is None:
             block = Block(
-                t_id=user["id"],
+                t_id=user["id_str"],
                 screen_name=user["screen_name"],
                 by_user_id=current_user.id,
                 by_user=current_user,
