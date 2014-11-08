@@ -1,6 +1,6 @@
 from communalblocklist import app
 from communalblocklist.models import Block, Topic, User, db, get_or_create
-from communalblocklist.utils import computeSetsForCurrentUser
+from communalblocklist.utils import computeSetsForUser
 from flask import request
 from flask_dance.contrib.twitter import twitter
 from flask.ext.restful import reqparse, abort, Api, Resource
@@ -122,7 +122,7 @@ class CurrentUserSubscribedTopicsList(Resource):
 class CurrentUserBlocks(Resource):
     @login_required
     def get(self):
-        id_sets = computeSetsForCurrentUser()
+        id_sets = computeSetsForUser(current_user)
 
         return {
           "target" : id_sets["target"],

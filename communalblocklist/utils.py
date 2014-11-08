@@ -10,8 +10,8 @@ def getTopicID(topic):
 def getTwitterIDs(block):
     return block.t_id
 
-def computeSetsForCurrentUser():
-    subscribed_topics = current_user.topics
+def computeSetsForUser(user):
+    subscribed_topics = user.topics
 
     # Getting the current list of blocks for this user
     resp = twitter.get("blocks/ids.json")
