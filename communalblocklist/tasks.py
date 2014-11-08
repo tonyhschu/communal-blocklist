@@ -1,5 +1,5 @@
 from communalblocklist import app
-from communalblocklist.utils import computeSetsForUser
+from communalblocklist.utils import computeSetsForUser, blockForUser
 from communalblocklist.models import Block, Topic, User, db, get_or_create
 from celery import Celery
 
@@ -18,12 +18,27 @@ def make_celery(app):
 celery = make_celery(app)
 
 @celery.task()
+def blockIDForUserID(t_id, user_id):
+    user = User.query.filter_by(id = user_id).first()
+    block = Block.query.filter_by(t_id = t_id).first()
+
+    resp = blockForUser(block, user)
+
+    if resp.status_code is "200":
+        app.logger.debug("yay")
+
+        user.blocked.append(block)
+        db.session.commit()
+    else:
+        app.logger.debug("booo")
+
+@celery.task()
 def syncUser(user_id):
     user = User.query.filter_by(id = user_id).first()
     sets = computeSetsForUser(user)
 
     for t_id in sets["to_sync"]:
-        app.logger.debug(t_id)
+        blockIDForUserID(t_id, user_id)
 
 @celery.task()
 def queueSync():
