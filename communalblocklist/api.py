@@ -14,7 +14,7 @@ api = Api(app)
 parser = reqparse.RequestParser()
 
 # Add Blocks
-parser.add_argument('user_id', type=int, help='The numeric ID of the twitter user to be blocked.')
+parser.add_argument('user_id', type=str, help='The numeric ID of the twitter user to be blocked.')
 parser.add_argument('screen_name', type=str, help='The screen name the twitter user to be blocked.')
 parser.add_argument('topics', type=str)
 parser.add_argument('topic', type=str)
@@ -130,7 +130,9 @@ class CurrentUserBlocks(Resource):
           "on_twitter" : id_sets["on_twitter"],
           "recorded" : id_sets["recorded"],
           "new" : id_sets["new"],
-          "to_sync" : id_sets["to_sync"]
+          "to_sync" : id_sets["to_sync"],
+          "uncategorized" : id_sets["uncategorized"],
+          "private" : id_sets["private"]
         }
 
 
@@ -186,7 +188,7 @@ class Blocks(Resource):
                 topics.append(topic)
 
         # Checking the user is already in our DB
-        block = Block.query.filter_by(t_id=int(user["id_str"])).first()
+        block = Block.query.filter_by(t_id=user["id_str"]).first()
 
         if block is None:
             block = Block(
