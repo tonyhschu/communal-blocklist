@@ -9,13 +9,22 @@ def getTopicID(topic):
 def getTwitterIDs(block):
     return block.t_id
 
-def computeSetsForUser(user):
-    subscribed_topics = user.topics
-
+def getTwitterSession(user):
     oauthRecord = OAuth.query.filter_by(user_id = user.id).first()
     oauthToken = oauthRecord.token
 
-    twitter = OAuth1Session(os.environ['TWITTER_KEY'], client_secret=os.environ['TWITTER_SECRET'], resource_owner_key=oauthToken['oauth_token'], resource_owner_secret=oauthToken['oauth_token_secret'])
+    return OAuth1Session(os.environ['TWITTER_KEY'], client_secret=os.environ['TWITTER_SECRET'], resource_owner_key=oauthToken['oauth_token'], resource_owner_secret=oauthToken['oauth_token_secret'])
+
+def blockForUser(block, user):
+    twitter = getTwitterSession(user)
+
+    payload = {'user_id': block.t_id, 'include_entities': False, 'skip_status': False}
+    return twitter.post("https://api.twitter.com/1.1/blocks/create.json", data=payload)
+
+def computeSetsForUser(user):
+    subscribed_topics = user.topics
+
+    twitter = getTwitterSession(user)
 
     # Getting the current list of blocks for this user
     resp = twitter.get("https://api.twitter.com/1.1/blocks/ids.json")
