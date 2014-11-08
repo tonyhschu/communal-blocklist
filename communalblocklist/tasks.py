@@ -29,6 +29,7 @@ def blockIDForUserID(t_id, user_id):
 
         user.blocked.append(block)
         db.session.commit()
+        db.session.close()
     else:
         app.logger.debug("booo")
 
@@ -38,9 +39,13 @@ def syncUser(user_id):
     sets = computeSetsForUser(user)
 
     for t_id in sets["to_sync"]:
-        blockIDForUserID(t_id, user_id)
+        blockIDForUserID.delay(t_id, user_id)
+
+    db.session.close()
 
 @celery.task()
 def queueSync():
     for u in db.session.query(User):
         syncUser.delay(u.id)
+
+    db.session.close()
