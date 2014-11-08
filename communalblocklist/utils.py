@@ -13,9 +13,7 @@ def computeSetsForUser(user):
     subscribed_topics = user.topics
 
     oauthRecord = OAuth.query.filter_by(user_id = user.id).first()
-    app.logger.debug(oauthRecord)
     oauthToken = oauthRecord.token
-    app.logger.debug(oauthToken['oauth_token_secret'])
 
     twitter = OAuth1Session(os.environ['TWITTER_KEY'], client_secret=os.environ['TWITTER_SECRET'], resource_owner_key=oauthToken['oauth_token'], resource_owner_secret=oauthToken['oauth_token_secret'])
 
