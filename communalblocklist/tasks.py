@@ -1,4 +1,6 @@
 from communalblocklist import app
+from communalblocklist.utils import computeSetsForUser
+from communalblocklist.models import Block, Topic, User, db, get_or_create
 from celery import Celery
 
 def make_celery(app):
@@ -16,10 +18,14 @@ def make_celery(app):
 celery = make_celery(app)
 
 @celery.task()
-def add_together(a, b):
-    return a + b
+def syncUser(user_id):
+    user = User.query.filter_by(id = user_id).first()
+    sets = computeSetsForUser(user)
 
-'''
->>> import communalblocklist.tasks
->>> communalblocklist.tasks.add_together.delay(1, 2)
-'''
+    for t_id in sets["to_sync"]:
+        app.logger.debug(t_id)
+
+@celery.task()
+def queueSync():
+    for u in db.session.query(User):
+        syncUser.delay(u.id)
