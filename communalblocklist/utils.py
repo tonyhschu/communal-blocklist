@@ -17,8 +17,6 @@ def computeSetsForUser(user):
     resp = twitter.get("blocks/ids.json")
     current_blocks = resp.json()
 
-    app.logger.debug(current_blocks)
-
     current_set = set(current_blocks["ids"])
 
     # Get all users covered by subscribed topics
