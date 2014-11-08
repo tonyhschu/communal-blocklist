@@ -35,9 +35,11 @@ def computeSetsForUser(user):
     # Get all users covered by subscribed topics
     subscribed_topic_ids = map(getTopicID, subscribed_topics)
 
-    all_blocks = Block.query.filter(Block.topics.any(Topic.id.in_(subscribed_topic_ids))).all()
-
-    all_set = set(map(getTwitterIDs, all_blocks))
+    if subscribed_topic_ids:
+        all_blocks = Block.query.filter(Block.topics.any(Topic.id.in_(subscribed_topic_ids))).all()
+        all_set = set(map(getTwitterIDs, all_blocks))
+    else:
+        all_set = set()
 
     # Get all recorded blocks
     recorded_blocks = user.blocked
