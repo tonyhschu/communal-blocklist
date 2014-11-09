@@ -32,6 +32,8 @@ def blockIDForUserID(t_id, user_id):
         # couldn't block
         app.logger.error("Unable to block '{0}' for user '{1}. Twitter returned a {2}'".format(block.screen_name, user.screen_name, resp.status_code))
 
+    db.session.close()
+
 @celery.task()
 def addIDsAsUncategorizedForUserID(t_id_set, user_id):
     user = User.query.filter_by(id = user_id).first()
@@ -56,8 +58,11 @@ def addIDsAsUncategorizedForUserID(t_id_set, user_id):
             db.session.add(block)
             db.session.commit()
 
-        user.uncategorized.append(block)
+        if block not in user.uncategorized:
+            user.uncategorized.append(block)
+            db.session.commit()
 
+    db.session.close()
 
 @celery.task()
 def syncUser(user_id):
