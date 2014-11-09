@@ -1,6 +1,6 @@
 from communalblocklist import app
 from communalblocklist.models import Block, Topic, User, db, get_or_create
-from communalblocklist.utils import computeSetsForCurrentUser
+from communalblocklist.utils import computeSetsForUser
 from flask import request
 from flask_dance.contrib.twitter import twitter
 from flask.ext.restful import reqparse, abort, Api, Resource
@@ -14,7 +14,7 @@ api = Api(app)
 parser = reqparse.RequestParser()
 
 # Add Blocks
-parser.add_argument('user_id', type=int, help='The numeric ID of the twitter user to be blocked.')
+parser.add_argument('user_id', type=str, help='The numeric ID of the twitter user to be blocked.')
 parser.add_argument('screen_name', type=str, help='The screen name the twitter user to be blocked.')
 parser.add_argument('topics', type=str)
 parser.add_argument('topic', type=str)
@@ -122,7 +122,7 @@ class CurrentUserSubscribedTopicsList(Resource):
 class CurrentUserBlocks(Resource):
     @login_required
     def get(self):
-        id_sets = computeSetsForCurrentUser()
+        id_sets = computeSetsForUser(current_user)
 
         return {
           "target" : id_sets["target"],
@@ -130,7 +130,9 @@ class CurrentUserBlocks(Resource):
           "on_twitter" : id_sets["on_twitter"],
           "recorded" : id_sets["recorded"],
           "new" : id_sets["new"],
-          "to_sync" : id_sets["to_sync"]
+          "to_sync" : id_sets["to_sync"],
+          "uncategorized" : id_sets["uncategorized"],
+          "private" : id_sets["private"]
         }
 
 
@@ -186,11 +188,11 @@ class Blocks(Resource):
                 topics.append(topic)
 
         # Checking the user is already in our DB
-        block = Block.query.filter_by(t_id=int(user["id"])).first()
+        block = Block.query.filter_by(t_id=user["id_str"]).first()
 
         if block is None:
             block = Block(
-                t_id=user["id"],
+                t_id=user["id_str"],
                 screen_name=user["screen_name"],
                 by_user_id=current_user.id,
                 by_user=current_user,

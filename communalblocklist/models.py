@@ -22,6 +22,14 @@ users_exception = db.Table('users_exception',
         db.Column('user_id', db.Integer(), db.ForeignKey('users.id')),
         db.Column('block_id', db.Integer(), db.ForeignKey('block.id')))
 
+users_uncategorized = db.Table('users_uncategorized',
+        db.Column('user_id', db.Integer(), db.ForeignKey('users.id')),
+        db.Column('block_id', db.Integer(), db.ForeignKey('block.id')))
+
+users_private = db.Table('users_private',
+        db.Column('user_id', db.Integer(), db.ForeignKey('users.id')),
+        db.Column('block_id', db.Integer(), db.ForeignKey('block.id')))
+
 class Topic(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True)
@@ -42,7 +50,7 @@ class User(db.Model, UserMixin):
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
-    t_id = db.Column(db.Integer)
+    t_id = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True)
     screen_name = db.Column(db.String(15), nullable=False)
 
@@ -55,6 +63,12 @@ class User(db.Model, UserMixin):
     exception = db.relationship('Block', secondary=users_exception,
                             backref=db.backref('users_exception', lazy='dynamic'))
 
+    uncategorized = db.relationship('Block', secondary=users_uncategorized,
+                            backref=db.backref('users_uncategorized', lazy='dynamic'))
+
+    private = db.relationship('Block', secondary=users_private,
+                            backref=db.backref('users_private', lazy='dynamic'))
+
     def __repr__(self):
         return '<User %r>' % self.screen_name
 
@@ -63,11 +77,11 @@ class User(db.Model, UserMixin):
 
 class Block(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    t_id = db.Column(db.Integer, unique=True)
+    t_id = db.Column(db.String(255))
     screen_name = db.Column(db.String(15), nullable=False)
     topics = db.relationship('Topic', secondary=topics_blocks,
                             backref=db.backref('topic', lazy='dynamic'))
-    first_blocked = db.Column(db.DateTime, default=datetime.utcnow)
+    first_added = db.Column(db.DateTime, default=datetime.utcnow)
     by_user_id = db.Column(db.Integer, db.ForeignKey(User.id))
     by_user = db.relationship(User)
 
